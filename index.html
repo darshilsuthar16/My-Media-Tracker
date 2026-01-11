@@ -87,7 +87,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState } = React;
+        const { useState, useEffect } = React;
 
         // --- Data & Helpers ---
 
@@ -153,10 +153,42 @@
         // --- Components ---
 
         function App() {
+            // -- State with LocalStorage Persistence --
+
+            // Helper for lazy state initialization
+            const getInitialState = (key, fallback) => {
+                const saved = localStorage.getItem(key);
+                if (saved) {
+                    try {
+                        return JSON.parse(saved);
+                    } catch (e) {
+                        console.error('Error parsing localStorage data', e);
+                        return fallback;
+                    }
+                }
+                return fallback;
+            };
+
             const [inputText, setInputText] = useState('');
-            const [books, setBooks] = useState(INITIAL_BOOKS);
-            const [movies, setMovies] = useState(INITIAL_MOVIES);
-            const [tvSeries, setTvSeries] = useState(INITIAL_TV);
+            
+            const [books, setBooks] = useState(() => getInitialState('tracker_books', INITIAL_BOOKS));
+            const [movies, setMovies] = useState(() => getInitialState('tracker_movies', INITIAL_MOVIES));
+            const [tvSeries, setTvSeries] = useState(() => getInitialState('tracker_tv', INITIAL_TV));
+
+            // -- Effects to save data when state changes --
+            
+            useEffect(() => {
+                localStorage.setItem('tracker_books', JSON.stringify(books));
+            }, [books]);
+
+            useEffect(() => {
+                localStorage.setItem('tracker_movies', JSON.stringify(movies));
+            }, [movies]);
+
+            useEffect(() => {
+                localStorage.setItem('tracker_tv', JSON.stringify(tvSeries));
+            }, [tvSeries]);
+
 
             const handleAddItem = (category) => {
                 if (!inputText.trim()) return;
@@ -172,17 +204,17 @@
                     statusTag: category === 'tv' ? 'New' : undefined
                 };
 
-                if (category === 'book') setBooks([...books, newItem]);
-                if (category === 'movie') setMovies([...movies, newItem]);
-                if (category === 'tv') setTvSeries([...tvSeries, newItem]);
+                if (category === 'book') setBooks(prev => [...prev, newItem]);
+                if (category === 'movie') setMovies(prev => [...prev, newItem]);
+                if (category === 'tv') setTvSeries(prev => [...prev, newItem]);
 
                 setInputText('');
             };
 
             const handleDelete = (id, category) => {
-                if (category === 'book') setBooks(books.filter(item => item.id !== id));
-                if (category === 'movie') setMovies(movies.filter(item => item.id !== id));
-                if (category === 'tv') setTvSeries(tvSeries.filter(item => item.id !== id));
+                if (category === 'book') setBooks(prev => prev.filter(item => item.id !== id));
+                if (category === 'movie') setMovies(prev => prev.filter(item => item.id !== id));
+                if (category === 'tv') setTvSeries(prev => prev.filter(item => item.id !== id));
             };
 
             return (
