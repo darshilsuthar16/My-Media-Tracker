@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>My Media Tracker Dashboard</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f0f2f5",
+                        "background-dark": "#101922",
+                        "indigo-accent": "#6366f1",
+                        "rose-accent": "#f43f5e",
+                        "teal-accent": "#14b8a6",
+                    },
+                    fontFamily: {
+                        "display": ["Spline Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                    boxShadow: {
+                        'neo': '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff',
+                        'neo-inset': 'inset 6px 6px 12px #d1d9e6, inset -6px -6px 12px #ffffff',
+                        'neo-dark': '8px 8px 16px #080d12, -8px -8px 16px #182532',
+                        'neo-inset-dark': 'inset 6px 6px 12px #080d12, inset -6px -6px 12px #182532',
+                    }
+                },
+            },
+        }
+    </script>
+
+    <!-- Custom CSS -->
+    <style>
+        body {
+            background-color: #f0f2f5;
+            font-family: 'Spline Sans', sans-serif;
+            min-height: 100vh;
+        }
+        .dark body {
+            background-color: #101922;
+        }
+        .neo-card {
+            box-shadow: 8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff;
+        }
+        .dark .neo-card {
+            box-shadow: 8px 8px 16px #080d12, -8px -8px 16px #182532;
+        }
+        .neo-inset {
+            box-shadow: inset 6px 6px 12px #d1d9e6, inset -6px -6px 12px #ffffff;
+        }
+        .dark .neo-inset {
+            box-shadow: inset 6px 6px 12px #080d12, inset -6px -6px 12px #182532;
+        }
+    </style>
+
+    <!-- React Dependencies -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/"
+  }
+}
+</script>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
+    
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        // --- Data & Helpers ---
+
+        const generateId = () => Math.random().toString(36).substr(2, 9);
+
+        const INITIAL_BOOKS = [
+            {
+                id: '1',
+                title: 'The Great Gatsby',
+                category: 'book',
+                subtitle: 'F. Scott Fitzgerald',
+                imageUrl: 'https://picsum.photos/seed/gatsby/200/300',
+                progress: 65
+            },
+            {
+                id: '2',
+                title: 'Atomic Habits',
+                category: 'book',
+                subtitle: 'James Clear',
+                imageUrl: 'https://picsum.photos/seed/atomic/200/300',
+                progress: 100
+            }
+        ];
+
+        const INITIAL_MOVIES = [
+            {
+                id: '3',
+                title: 'Inception',
+                category: 'movie',
+                subtitle: 'Sci-Fi • 2h 28m',
+                imageUrl: 'https://picsum.photos/seed/inception/200/300',
+                rating: 5
+            },
+            {
+                id: '4',
+                title: 'Dune: Part Two',
+                category: 'movie',
+                subtitle: 'Epic Sci-Fi • 2h 46m',
+                imageUrl: 'https://picsum.photos/seed/dune/200/300',
+                statusTag: 'To Watch'
+            }
+        ];
+
+        const INITIAL_TV = [
+            {
+                id: '5',
+                title: 'The Bear',
+                category: 'tv',
+                subtitle: 'Season 2 • Ep 8/10',
+                imageUrl: 'https://picsum.photos/seed/bear/200/300',
+                statusTag: 'Continue'
+            },
+            {
+                id: '6',
+                title: 'Succession',
+                category: 'tv',
+                subtitle: 'Series Complete',
+                imageUrl: 'https://picsum.photos/seed/succession/200/300',
+                statusTag: 'Finished'
+            }
+        ];
+
+        // --- Components ---
+
+        function App() {
+            const [inputText, setInputText] = useState('');
+            const [books, setBooks] = useState(INITIAL_BOOKS);
+            const [movies, setMovies] = useState(INITIAL_MOVIES);
+            const [tvSeries, setTvSeries] = useState(INITIAL_TV);
+
+            const handleAddItem = (category) => {
+                if (!inputText.trim()) return;
+
+                const newItem = {
+                    id: generateId(),
+                    title: inputText,
+                    category,
+                    imageUrl: `https://picsum.photos/seed/${generateId()}/200/300`,
+                    subtitle: category === 'book' ? 'Unknown Author' : category === 'movie' ? 'Genre • 0h 00m' : 'Season 1 • Ep 1',
+                    progress: category === 'book' ? 0 : undefined,
+                    rating: category === 'movie' ? 0 : undefined,
+                    statusTag: category === 'tv' ? 'New' : undefined
+                };
+
+                if (category === 'book') setBooks([...books, newItem]);
+                if (category === 'movie') setMovies([...movies, newItem]);
+                if (category === 'tv') setTvSeries([...tvSeries, newItem]);
+
+                setInputText('');
+            };
+
+            const handleDelete = (id, category) => {
+                if (category === 'book') setBooks(books.filter(item => item.id !== id));
+                if (category === 'movie') setMovies(movies.filter(item => item.id !== id));
+                if (category === 'tv') setTvSeries(tvSeries.filter(item => item.id !== id));
+            };
+
+            return (
+                <div className="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden pb-10">
+                    {/* TopAppBar */}
+                    <header className="flex items-center bg-background-light dark:bg-background-dark p-4 pb-2 justify-between sticky top-0 z-50">
+                        <div className="text-primary flex size-12 shrink-0 items-center justify-center rounded-xl neo-card">
+                            <span className="material-symbols-outlined">dashboard_customize</span>
+                        </div>
+                        <h2 className="text-[#0d141b] dark:text-slate-100 text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center font-display">
+                            My Media Tracker
+                        </h2>
+                        <div className="flex w-12 items-center justify-end">
+                            <button className="flex size-12 cursor-pointer items-center justify-center overflow-hidden rounded-xl bg-background-light dark:bg-background-dark text-primary neo-card hover:scale-105 transition-transform">
+                                <span className="material-symbols-outlined">account_circle</span>
+                            </button>
+                        </div>
+                    </header>
+
+                    {/* HeadlineText */}
+                    <div className="px-4 pt-8 pb-2">
+                        <h1 className="text-[#0d141b] dark:text-white tracking-tight text-[28px] font-bold leading-tight text-center font-display">
+                            Track your journey
+                        </h1>
+                        <p className="text-slate-500 dark:text-slate-400 text-center text-sm mt-1">What are you enjoying today?</p>
+                    </div>
+
+                    {/* Search/Add Section */}
+                    <div className="px-4 py-6">
+                        <div className="neo-inset rounded-xl p-1 bg-background-light dark:bg-background-dark">
+                            <div className="flex items-center px-4 py-3">
+                                <input
+                                    className="w-full bg-transparent border-none focus:ring-0 text-[#0d141b] dark:text-white placeholder:text-slate-400 font-normal text-base focus:outline-none"
+                                    placeholder="Enter title..."
+                                    value={inputText}
+                                    onChange={(e) => setInputText(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if(e.key === 'Enter') handleAddItem('book');
+                                    }}
+                                />
+                                <span className="material-symbols-outlined text-primary">search</span>
+                            </div>
+                        </div>
+
+                        {/* ButtonGroup */}
+                        <div className="flex flex-wrap gap-4 mt-6 justify-between">
+                            <button
+                                onClick={() => handleAddItem('book')}
+                                className="flex-1 flex flex-col items-center justify-center gap-2 py-4 rounded-xl neo-card bg-background-light dark:bg-background-dark border-b-4 border-indigo-accent active:translate-y-1 active:shadow-none transition-all hover:brightness-105"
+                            >
+                                <span className="material-symbols-outlined text-indigo-accent">menu_book</span>
+                                <span className="text-xs font-bold uppercase tracking-wider text-indigo-accent">Add Book</span>
+                            </button>
+                            <button
+                                onClick={() => handleAddItem('movie')}
+                                className="flex-1 flex flex-col items-center justify-center gap-2 py-4 rounded-xl neo-card bg-background-light dark:bg-background-dark border-b-4 border-rose-accent active:translate-y-1 active:shadow-none transition-all hover:brightness-105"
+                            >
+                                <span className="material-symbols-outlined text-rose-accent">movie</span>
+                                <span className="text-xs font-bold uppercase tracking-wider text-rose-accent">Add Movie</span>
+                            </button>
+                            <button
+                                onClick={() => handleAddItem('tv')}
+                                className="flex-1 flex flex-col items-center justify-center gap-2 py-4 rounded-xl neo-card bg-background-light dark:bg-background-dark border-b-4 border-teal-accent active:translate-y-1 active:shadow-none transition-all hover:brightness-105"
+                            >
+                                <span className="material-symbols-outlined text-teal-accent">tv</span>
+                                <span className="text-xs font-bold uppercase tracking-wider text-teal-accent">Add TV</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Main Content */}
+                    <main className="flex flex-col gap-8 px-4 mt-4">
+                        
+                        {/* Books Column */}
+                        <section className="flex flex-col gap-4">
+                            <div className="flex items-center gap-2 px-2">
+                                <span className="text-2xl">📚</span>
+                                <h3 className="text-xl font-bold text-indigo-accent font-display">Books</h3>
+                                <span className="ml-auto text-xs font-bold text-slate-400 bg-slate-200 dark:bg-slate-800 px-2 py-1 rounded-full">{books.length}</span>
+                            </div>
+                            
+                            <div className="neo-card bg-background-light dark:bg-background-dark rounded-xl p-4 flex flex-col gap-4 min-h-[100px]">
+                                {books.length === 0 && (
+                                    <div className="text-center text-slate-400 text-sm py-4 italic">No books tracked yet.</div>
+                                )}
+                                {books.map(item => (
+                                    <div key={item.id} className="relative group flex items-center gap-4 p-2 rounded-lg neo-inset bg-background-light dark:bg-background-dark transition-all hover:bg-white/50 dark:hover:bg-black/20">
+                                        <div className="size-14 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-accent shrink-0 overflow-hidden shadow-inner">
+                                            <img className="object-cover w-full h-full" src={item.imageUrl} alt="Book cover" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <h4 className="font-bold text-sm truncate pr-6">{item.title}</h4>
+                                            <p className="text-xs text-slate-500 truncate">{item.subtitle}</p>
+                                            <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 mt-2 rounded-full overflow-hidden">
+                                                <div className="bg-indigo-accent h-full transition-all duration-500" style={{ width: `${item.progress || 0}%` }}></div>
+                                            </div>
+                                        </div>
+                                        <button 
+                                            onClick={() => handleDelete(item.id, 'book')}
+                                            className="absolute -top-2 -right-2 size-6 rounded-full bg-rose-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+                                        >
+                                            <span className="material-symbols-outlined text-[16px]">close</span>
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+
+                        {/* Movies Column */}
+                        <section className="flex flex-col gap-4">
+                            <div className="flex items-center gap-2 px-2">
+                                <span className="text-2xl">🎬</span>
+                                <h3 className="text-xl font-bold text-rose-accent font-display">Movies</h3>
+                                <span className="ml-auto text-xs font-bold text-slate-400 bg-slate-200 dark:bg-slate-800 px-2 py-1 rounded-full">{movies.length}</span>
+                            </div>
+                            <div className="neo-card bg-background-light dark:bg-background-dark rounded-xl p-4 flex flex-col gap-4 min-h-[100px]">
+                                {movies.length === 0 && (
+                                    <div className="text-center text-slate-400 text-sm py-4 italic">No movies tracked yet.</div>
+                                )}
+                                {movies.map(item => (
+                                    <div key={item.id} className="relative group flex items-center gap-4 p-2 rounded-lg neo-inset bg-background-light dark:bg-background-dark transition-all hover:bg-white/50 dark:hover:bg-black/20">
+                                        <div className="size-14 rounded-lg bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center text-rose-accent shrink-0 overflow-hidden shadow-inner">
+                                            <img className="object-cover w-full h-full" src={item.imageUrl} alt="Movie poster" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <h4 className="font-bold text-sm truncate pr-6">{item.title}</h4>
+                                            <p className="text-xs text-slate-500 truncate">{item.subtitle}</p>
+                                            {item.rating !== undefined && item.rating > 0 ? (
+                                                <div className="flex gap-1 mt-1">
+                                                    {[...Array(5)].map((_, i) => (
+                                                        <span key={i} className={`material-symbols-outlined text-[14px] ${i < (item.rating || 0) ? 'text-rose-accent fill-1' : 'text-slate-300'}`}>star</span>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-900/40 text-rose-600 font-bold uppercase mt-1 inline-block">
+                                                    {item.statusTag || 'To Watch'}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <button 
+                                            onClick={() => handleDelete(item.id, 'movie')}
+                                            className="absolute -top-2 -right-2 size-6 rounded-full bg-rose-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+                                        >
+                                            <span className="material-symbols-outlined text-[16px]">close</span>
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+
+                        {/* TV Series Column */}
+                        <section className="flex flex-col gap-4">
+                            <div className="flex items-center gap-2 px-2">
+                                <span className="text-2xl">📺</span>
+                                <h3 className="text-xl font-bold text-teal-accent font-display">TV Series</h3>
+                                <span className="ml-auto text-xs font-bold text-slate-400 bg-slate-200 dark:bg-slate-800 px-2 py-1 rounded-full">{tvSeries.length}</span>
+                            </div>
+                            <div className="neo-card bg-background-light dark:bg-background-dark rounded-xl p-4 flex flex-col gap-4 min-h-[100px]">
+                                {tvSeries.length === 0 && (
+                                    <div className="text-center text-slate-400 text-sm py-4 italic">No TV series tracked yet.</div>
+                                )}
+                                {tvSeries.map(item => (
+                                    <div key={item.id} className="relative group flex items-center gap-4 p-2 rounded-lg neo-inset bg-background-light dark:bg-background-dark transition-all hover:bg-white/50 dark:hover:bg-black/20">
+                                        <div className="size-14 rounded-lg bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center text-teal-accent shrink-0 overflow-hidden shadow-inner">
+                                            <img className="object-cover w-full h-full" src={item.imageUrl} alt="TV poster" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <h4 className="font-bold text-sm truncate pr-6">{item.title}</h4>
+                                            <p className="text-xs text-slate-500 truncate">{item.subtitle}</p>
+                                            
+                                            {item.statusTag ? (
+                                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-teal-100 dark:bg-teal-900/40 text-teal-600 font-bold uppercase mt-1 inline-block">
+                                                    {item.statusTag}
+                                                </span>
+                                            ) : (
+                                                <div className="flex items-center justify-between mt-2">
+                                                    <div className="flex -space-x-1">
+                                                        <div className="size-4 rounded-full bg-teal-500 border border-white"></div>
+                                                        <div className="size-4 rounded-full bg-teal-500 border border-white"></div>
+                                                        <div className="size-4 rounded-full bg-slate-200 border border-white"></div>
+                                                    </div>
+                                                    <span className="text-[10px] font-medium text-teal-600">Continue</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <button 
+                                            onClick={() => handleDelete(item.id, 'tv')}
+                                            className="absolute -top-2 -right-2 size-6 rounded-full bg-rose-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+                                        >
+                                            <span className="material-symbols-outlined text-[16px]">close</span>
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+
+                    </main>
+
+                    {/* Floating Action Button */}
+                    <button 
+                        onClick={() => {
+                            document.querySelector('input')?.focus();
+                        }}
+                        className="fixed bottom-6 right-6 size-14 bg-primary text-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform z-50 hover:bg-blue-600"
+                    >
+                        <span className="material-symbols-outlined text-3xl">add</span>
+                    </button>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
